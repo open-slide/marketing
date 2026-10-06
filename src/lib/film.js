@@ -12,8 +12,9 @@ export function defineFilm({
   transitions = [],
   hits = [],
   card = CARD,
+  vignette = 1,
 }) {
-  return { title, duration, bpm, poster, fonts, scenes, transitions, hits, card };
+  return { title, duration, bpm, poster, fonts, scenes, transitions, hits, card, vignette };
 }
 
 export function beatGrid(bpm) {

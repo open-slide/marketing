@@ -42,6 +42,8 @@ export function createEngine(stage, film) {
   const flash = h('div', { class: 'post flash' });
   const vignette = h('div', { class: 'post vignette' });
   stage.append(flash, vignette);
+  // Light films can soften the edge darkening; 1 keeps the default look.
+  if ((film.vignette ?? 1) !== 1) set(vignette, { opacity: film.vignette });
 
   function seek(T) {
     for (const m of mounted) {
