@@ -1,93 +1,54 @@
 import { h } from '#lib/dom.js';
 
-let uid = 0;
-
-export const SERIF = "'Instrument Serif', 'Times New Roman', serif";
-export const FONTS = [
-  { family: 'Instrument Serif', weight: 400 },
-  { family: 'Instrument Serif', weight: 400, italic: true },
-];
-
-// Warm paper, soft ink, one champagne-gold accent.
+// Vercel-style monochrome with one warm gradient, on pure white.
 export const P = {
-  paper: '#f7f4ee',
-  ink: '#1d1b18',
-  ink2: '#4b4740',
-  muted: '#8c867b',
-  hair: 'rgb(29 27 24 / 0.18)',
-  gold: '#b0843a',
-  goldSoft: 'rgb(176 132 58 / 0.16)',
+  bg: '#ffffff',
+  fg: '#0a0a0a',
+  fg2: '#171717',
+  gray: '#666666',
+  gray2: '#8f8f8f',
+  line: '#eaeaea',
+  wash: '#fafafa',
+  blue: '#0070f3',
+  red: '#e5484d',
 };
 
-export const PAPER_BG =
-  'radial-gradient(120% 100% at 50% 38%, #fcfaf6 0%, #f5f1e9 62%, #ebe5d9 100%)';
+export const GRADIENT = 'linear-gradient(100deg, #ff4d4d 0%, #f9661f 45%, #f5a524 100%)';
 
-export const paper = () => h('div', { class: 'fill', style: `background:${PAPER_BG}` });
+// The blueprint frame every chapter sits on.
+export const FRAME = { x0: 120, x1: 1800, y0: 180, y1: 900 };
+export const COLS = [120, 660, 1260, 1800];
+export const MID = 540;
 
-// A five-point star centred on (0, 0), outer radius `R`.
-export function starPoints(R, inner = 0.42) {
-  const pts = [];
-  for (let k = 0; k < 10; k++) {
-    const a = -Math.PI / 2 + (k * Math.PI) / 5;
-    const r = k % 2 ? R * inner : R;
-    pts.push(`${(Math.cos(a) * r).toFixed(2)},${(Math.sin(a) * r).toFixed(2)}`);
-  }
-  return pts.join(' ');
+export const hline = (y, x0 = 0, x1 = 1920, origin = '50% 50%') =>
+  h('div', {
+    style: `position:absolute;left:${x0}px;top:${y}px;width:${x1 - x0}px;height:1px;background:${P.line};transform-origin:${origin}`,
+  });
+export const vline = (x, y0 = 0, y1 = 1080, origin = '50% 50%') =>
+  h('div', {
+    style: `position:absolute;left:${x}px;top:${y0}px;width:1px;height:${y1 - y0}px;background:${P.line};transform-origin:${origin}`,
+  });
+
+// The "+" mark Vercel puts on grid intersections.
+export function cross(x, y, size = 22) {
+  const s = `position:absolute;background:${P.gray2}`;
+  return h(
+    'div',
+    {
+      style: `position:absolute;left:${x - size / 2 + 0.5}px;top:${y - size / 2 + 0.5}px;width:${size}px;height:${size}px`,
+    },
+    h('div', { style: `${s};left:0;top:${size / 2 - 0.5}px;width:${size}px;height:1px` }),
+    h('div', { style: `${s};left:${size / 2 - 0.5}px;top:0;width:1px;height:${size}px` }),
+  );
 }
 
-// The gold star ornament: an outline that can draw on, a fill that can fade
-// in, and a ring that can bloom outward. `size` is the box in px.
-export function goldStar(size) {
-  const R = 46;
-  const id = `gs${uid++}`;
-  const outline = h('polygon', {
-    points: starPoints(R),
-    fill: 'none',
-    stroke: P.gold,
-    'stroke-width': 2.2,
-    'stroke-linejoin': 'round',
-    pathLength: 1,
-    'stroke-dasharray': '1 1',
-    'vector-effect': 'non-scaling-stroke',
-  });
-  const fill = h('polygon', {
-    points: starPoints(R),
-    fill: P.gold,
-    'stroke-linejoin': 'round',
-    stroke: P.gold,
-    'stroke-width': 2,
-    opacity: 0,
-  });
-  const ring = h('circle', {
-    r: 60,
-    fill: 'none',
-    stroke: P.gold,
-    'stroke-width': 1.4,
-    opacity: 0,
-    'vector-effect': 'non-scaling-stroke',
-  });
-  const halo = h('circle', { r: 90, fill: `url(#${id})`, opacity: 0 });
-  const el = h(
-    'svg',
-    {
-      width: size,
-      height: size,
-      viewBox: '-50 -50 100 100',
-      style: 'display:block;overflow:visible',
-    },
-    h(
-      'defs',
-      h(
-        'radialGradient',
-        { id },
-        h('stop', { offset: '0', 'stop-color': '#e9cf95', 'stop-opacity': '0.55' }),
-        h('stop', { offset: '1', 'stop-color': '#e9cf95', 'stop-opacity': '0' }),
-      ),
-    ),
-    halo,
-    ring,
-    fill,
-    outline,
-  );
-  return { el, outline, fill, ring, halo };
+export function frameLines() {
+  const lines = [hline(FRAME.y0), hline(FRAME.y1), vline(FRAME.x0), vline(FRAME.x1)];
+  const crosses = [
+    [FRAME.x0, FRAME.y0],
+    [FRAME.x1, FRAME.y0],
+    [FRAME.x0, FRAME.y1],
+    [FRAME.x1, FRAME.y1],
+  ].map(([x, y]) => cross(x, y));
+  return { lines, crosses };
 }

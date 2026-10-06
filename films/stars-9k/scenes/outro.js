@@ -1,121 +1,116 @@
 import { prog, tween } from '#lib/anim.js';
-import { attr, h, set, split } from '#lib/dom.js';
-import { inOutCubic, outExpo, swift } from '#lib/ease.js';
-import { withCommas } from '#lib/fx.js';
+import { h, set } from '#lib/dom.js';
+import { inOutCubic, swift } from '#lib/ease.js';
 import { defineScene } from '#lib/scene.js';
-import { FONT, SHADOW } from '#theme';
+import { FONT } from '#theme';
+import { icon } from '#ui/icons.js';
 import { logoMark } from '#ui/logo.js';
-import { CTA, MILESTONE, SITE, THANKS } from '../copy.js';
-import { goldStar, P, PAPER_BG, paper, SERIF } from '../style.js';
+import { CTA, SITE, STAR_BTN, SUB_LEAD, SUB_REST, THANKS } from '../copy.js';
+import { FRAME, frameLines, P } from '../style.js';
 import { OUTRO as CUE, DURATION, SPANS } from '../timeline.js';
 
-const MARK = 128;
-const FADE = DURATION - 1.4;
+const rise = (el, p, dy = 16, blur = 10) =>
+  set(el, {
+    opacity: p,
+    transform: `translateY(${(1 - p) * dy}px)`,
+    filter: p < 1 ? `blur(${((1 - p) * blur).toFixed(2)}px)` : 'none',
+  });
 
 export default defineScene({
   name: 'outro',
   span: SPANS.outro,
   sfx: [
-    [CUE.mark, 'swell', 0.3],
-    [CUE.cta, 'pop', 0.25],
-    [CUE.site, 'blip', 0.18],
+    [CUE.thanks, 'shimmer', 0.5],
+    [CUE.cta, 'pop', 0.35],
+    [CUE.star, 'pop', 0.3],
+    [CUE.foot, 'blip', 0.2],
   ],
   build(root) {
-    const bg = paper();
+    set(root, { background: P.bg });
+    const { lines, crosses } = frameLines();
 
-    const star = goldStar(26);
-    const eyebrow = h(
+    const words = THANKS.split(' ').map((w) =>
+      h('span', { text: w, style: 'display:inline-block' }),
+    );
+    const thanks = h(
       'div',
       {
-        style:
-          'position:absolute;left:0;right:0;top:250px;display:flex;justify-content:center;align-items:center;gap:18px;white-space:nowrap;opacity:0',
+        style: `position:absolute;left:0;right:0;top:300px;display:flex;justify-content:center;gap:0.24em;font-family:${FONT.sans};font-size:190px;font-weight:700;letter-spacing:-0.06em;line-height:1;color:${P.fg};white-space:nowrap`,
       },
-      h('div', { style: 'width:26px;height:26px' }, star.el),
-      h('span', {
-        text: `${withCommas(MILESTONE)} stars on GitHub`.toUpperCase(),
-        style: `font-family:${FONT.sans};font-size:22px;font-weight:500;letter-spacing:0.32em;color:${P.gold}`,
-      }),
+      ...words,
     );
-
-    const mark = logoMark({ size: MARK, glow: false });
-    const markBox = h(
+    const sub = h(
       'div',
       {
-        style: `width:${MARK}px;height:${MARK}px;flex:none;border-radius:${MARK * 0.22}px;box-shadow:${SHADOW.floating}, 0 18px 40px -16px rgb(60 40 10 / 0.35)`,
+        style: `position:absolute;left:0;right:0;top:530px;text-align:center;font-family:${FONT.sans};font-size:48px;font-weight:500;letter-spacing:-0.025em;color:${P.gray};white-space:nowrap;opacity:0`,
       },
-      mark.el,
-    );
-    const word = h('div', {
-      style: `font-family:${FONT.sans};font-size:104px;font-weight:600;letter-spacing:-0.045em;line-height:1.1;color:${P.ink};white-space:nowrap`,
-    });
-    const chars = split(word, 'open-slide', { by: 'char', mask: true });
-    const lockup = h(
-      'div',
-      {
-        style:
-          'position:absolute;left:0;right:0;top:330px;display:flex;align-items:center;justify-content:center;gap:36px',
-      },
-      markBox,
-      word,
+      h('span', { text: `${SUB_LEAD} `, style: `color:${P.fg}` }),
+      SUB_REST,
     );
 
-    const rule = h('div', {
-      style: `position:absolute;left:${960 - 260}px;top:540px;width:520px;height:1.5px;background:linear-gradient(to right, transparent, ${P.hair} 20%, ${P.hair} 80%, transparent)`,
-    });
-    const thanks = h('div', {
-      text: THANKS,
-      style: `position:absolute;left:0;right:0;top:570px;text-align:center;font-family:${SERIF};font-style:italic;font-size:72px;color:${P.ink};white-space:nowrap;opacity:0`,
-    });
-
+    const btn = `display:flex;align-items:center;gap:14px;height:78px;padding:0 32px;border-radius:14px;font-size:28px;white-space:nowrap;opacity:0`;
     const cta = h(
       'div',
       {
-        style: `position:absolute;left:50%;top:730px;display:flex;gap:16px;padding:20px 34px;border-radius:999px;background:rgb(255 255 255 / 0.6);box-shadow:inset 0 0 0 1.5px ${P.hair}, 0 10px 30px -18px rgb(60 40 10 / 0.3);font-family:${FONT.mono};font-size:29px;color:${P.ink};white-space:nowrap;opacity:0`,
+        style: `${btn};background:${P.fg};color:#fff;font-family:${FONT.mono};box-shadow:0 8px 24px -10px rgb(0 0 0 / 0.45)`,
       },
-      h('span', { text: '$', style: `color:${P.gold}` }),
-      h('span', { text: CTA }),
+      h('span', { text: '$', style: 'color:rgb(255 255 255 / 0.5)' }),
+      CTA,
     );
-    const site = h('div', {
-      text: SITE,
-      style: `position:absolute;left:0;right:0;top:862px;text-align:center;font-family:${FONT.mono};font-size:24px;letter-spacing:0.14em;color:${P.muted};opacity:0`,
-    });
+    const star = h(
+      'div',
+      {
+        style: `${btn};background:#fff;color:${P.fg};font-family:${FONT.sans};font-weight:500;box-shadow:0 0 0 1px ${P.line}, 0 2px 6px rgb(0 0 0 / 0.04)`,
+      },
+      icon('star', { size: 26, stroke: 1.75 }),
+      STAR_BTN,
+    );
+    const buttons = h(
+      'div',
+      {
+        style:
+          'position:absolute;left:0;right:0;top:686px;display:flex;justify-content:center;gap:20px',
+      },
+      cta,
+      star,
+    );
 
-    const veil = h('div', { class: 'fill', style: `background:${PAPER_BG};opacity:0` });
-    const group = h('div', { class: 'fill' }, eyebrow, lockup, rule, thanks, cta, site);
-    root.append(bg, group, veil);
-    return { star, eyebrow, markBox, chars, group, rule, thanks, cta, site, veil };
+    const mark = logoMark({ size: 46, glow: false });
+    const foot = h(
+      'div',
+      {
+        style: `position:absolute;left:0;right:0;top:${FRAME.y1 + 52}px;display:flex;justify-content:center;align-items:center;gap:16px;white-space:nowrap;opacity:0`,
+      },
+      h('div', { style: 'width:46px;height:46px' }, mark.el),
+      h('span', {
+        text: 'open-slide',
+        style: `font-family:${FONT.sans};font-size:32px;font-weight:600;letter-spacing:-0.035em;color:${P.fg}`,
+      }),
+      h('span', { style: `width:1px;height:28px;background:${P.line};margin:0 8px` }),
+      h('span', {
+        text: SITE,
+        style: `font-family:${FONT.mono};font-size:24px;color:${P.gray}`,
+      }),
+    );
+
+    const veil = h('div', { class: 'fill', style: 'background:#fff;opacity:0' });
+    const stage = h('div', { class: 'fill' }, thanks, sub, buttons);
+    root.append(...lines, ...crosses, stage, foot, veil);
+    return { lines, crosses, words, stage, sub, cta, star, foot, veil };
   },
   update(s, _t, T) {
-    set(s.group, { transform: `scale(${tween(T, CUE.mark, 8, 0.985, 1.01, swift)})` });
+    const fp = prog(T, CUE.thanks - 0.4, 0.8, swift);
+    for (const el of [...s.lines, ...s.crosses]) set(el, { opacity: fp });
 
-    const mp = prog(T, CUE.mark, 1.4, outExpo);
-    set(s.markBox, {
-      opacity: mp,
-      transform: `translateY(${(1 - mp) * 24}px) scale(${0.94 + mp * 0.06})`,
+    s.words.forEach((el, i) => {
+      rise(el, prog(T, CUE.thanks + i * 0.22, 1.1, swift), 40, 18);
     });
-    s.chars.forEach((c, i) => {
-      const p = prog(T, CUE.word + i * 0.035, 1.1, outExpo);
-      set(c.inner, { transform: `translateY(${(1 - p) * 105}%)`, opacity: p > 0 ? 1 : 0 });
-    });
+    rise(s.sub, prog(T, CUE.sub, 1, swift), 16, 8);
+    rise(s.cta, prog(T, CUE.cta, 0.9, swift), 14, 6);
+    rise(s.star, prog(T, CUE.star, 0.9, swift), 14, 6);
+    rise(s.foot, prog(T, CUE.foot, 1, swift), 10, 6);
+    set(s.stage, { transform: `scale(${tween(T, CUE.thanks, 7, 1.02, 1, swift)})` });
 
-    const ep = prog(T, CUE.mark + 0.2, 1.2, swift);
-    set(s.eyebrow, { opacity: ep, transform: `translateY(${(1 - ep) * 12}px)` });
-    attr(s.star.outline, 'stroke-dashoffset', 0);
-    attr(s.star.fill, 'opacity', 1);
-
-    set(s.rule, { transform: `scaleX(${prog(T, CUE.line, 1.4, outExpo)})` });
-    const tp = prog(T, CUE.thanks, 1.4, swift);
-    set(s.thanks, {
-      opacity: tp,
-      transform: `translateY(${(1 - tp) * 20}px)`,
-      filter: tp < 1 ? `blur(${((1 - tp) * 6).toFixed(2)}px)` : 'none',
-    });
-
-    const cp = prog(T, CUE.cta, 1.1, swift);
-    set(s.cta, { opacity: cp, transform: `translateX(-50%) translateY(${(1 - cp) * 16}px)` });
-    const sp = prog(T, CUE.site, 1.1, swift);
-    set(s.site, { opacity: sp, transform: `translateY(${(1 - sp) * 12}px)` });
-
-    set(s.veil, { opacity: prog(T, FADE, 1.3, inOutCubic) });
+    set(s.veil, { opacity: prog(T, CUE.fade, DURATION - CUE.fade - 0.1, inOutCubic) });
   },
 });
