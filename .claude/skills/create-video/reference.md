@@ -6,7 +6,7 @@ Paths are relative to this repo's root. Film code imports shared modules through
 
 `#lib/film.js`
 
-- `defineFilm({ title, duration, bpm = 120, poster = 0, fonts = [], scenes, transitions = [], hits = [], card = 0.8 })`. `fonts` entries are `{ family, weight, italic? }` Google Fonts, loaded on top of Geist and Geist Mono.
+- `defineFilm({ title, duration, bpm = 120, poster = 0, fonts = [], scenes, transitions = [], hits = [], card = 0.8, backdrop = null })`. `fonts` entries are `{ family, weight, italic? }` Google Fonts, loaded on top of Geist and Geist Mono. `backdrop` is `{ color, dim, vignette? }` for light films: the stage color behind card hand-offs, the color a receding scene dims toward (default black), and a replacement vignette `background`.
 - `sequence(duration, chapters)` → `{ spans, transitions }`. Each chapter is `{ name, at, enter?: 'card', overlap? }`. It starts at `at` with a hard cut. With `enter: 'card'` it rises over the previous chapter as a rounded card: both spans overlap by 0.4 s on each side of `at`, and the whoosh is automatic. `overlap: s` overlaps both spans by `s` on each side with no card, and the scenes handle the blend themselves.
 - `beatGrid(bpm)` → `{ BEAT, BAR }`.
 - `HITS` entries are `{ t, amount, flash? }`. `amount` ≈ 0.5–1 drives camera shake, and `flash` 0–1 is a white flash.

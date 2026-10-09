@@ -26,7 +26,10 @@ export function createEngine(stage, film) {
     root.style.zIndex = String(scene.z ?? i + 1);
     shaker.append(root);
     const state = scene.build(root);
-    const dim = h('div', { class: 'post', style: 'background:#000;opacity:0;z-index:1000' });
+    const dim = h('div', {
+      class: 'post',
+      style: `background:${film.backdrop?.dim ?? '#000'};opacity:0;z-index:1000`,
+    });
     const edge = h('div', {
       class: 'post',
       style:
@@ -42,6 +45,10 @@ export function createEngine(stage, film) {
   const flash = h('div', { class: 'post flash' });
   const vignette = h('div', { class: 'post vignette' });
   stage.append(flash, vignette);
+  if (film.backdrop) {
+    stage.style.background = film.backdrop.color;
+    if (film.backdrop.vignette) vignette.style.background = film.backdrop.vignette;
+  }
 
   function seek(T) {
     for (const m of mounted) {
