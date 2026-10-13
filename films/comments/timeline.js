@@ -1,6 +1,6 @@
 import { beatGrid, sequence } from '#lib/film.js';
 
-export const DURATION = 39;
+export const DURATION = 42;
 export const { BEAT, BAR } = beatGrid(120);
 
 // A montage of hero shots: tight, near-frontal crops of the UI, each with a
@@ -61,13 +61,12 @@ export const APPLY = {
   close: 33,
 };
 
-export const OUTRO = { lockup: 35, cta: 35.6, site: 36.0, fade: 37.6 };
+// The ending: a line of copy, then a hard cut on the bar to the logo, which
+// holds still until the fade.
+export const OUTRO = { text: 35, logo: 38, fade: 40.2 };
 
 // The pill's total: 3 comments on page 1, then 3 more across the deck in the
 // rail shot.
 export const TOTAL = 6;
 
-export const HITS = [
-  { t: APPLY.drop, amount: 0.15 },
-  { t: OUTRO.lockup, amount: 0.08 },
-];
+export const HITS = [{ t: APPLY.drop, amount: 0.15 }];

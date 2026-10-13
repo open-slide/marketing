@@ -1,0 +1,42 @@
+// The open-slide app icon (apps/web/public/open-slide.svg in the monorepo),
+// inlined so it is painted on the first frame of any render worker. Ids are
+// prefixed to keep them unique in the page.
+export const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="os-tile" x1="256" y1="16" x2="256" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EFEBE6"/>
+    </linearGradient>
+    <linearGradient id="os-tile-edge" x1="256" y1="16" x2="256" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="os-slide" x1="256" y1="172" x2="256" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8A5E"/>
+      <stop offset="0.45" stop-color="#FE5226"/>
+      <stop offset="1" stop-color="#EE4316"/>
+    </linearGradient>
+    <linearGradient id="os-slide-edge" x1="256" y1="172" x2="256" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.8" stop-color="#B8300C" stop-opacity="0"/>
+      <stop offset="1" stop-color="#B8300C" stop-opacity="0.5"/>
+    </linearGradient>
+    <radialGradient id="os-slide-sheen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(196 184) rotate(32) scale(200 110)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="os-lift" x="60" y="140" width="392" height="260" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#FE5226" flood-opacity="0.32"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#8A2306" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#os-tile)"/>
+  <rect x="17.5" y="17.5" width="477" height="477" rx="110.5" stroke="url(#os-tile-edge)" stroke-width="3"/>
+  <g filter="url(#os-lift)">
+    <rect x="112" y="172" width="288" height="168" rx="34" fill="url(#os-slide)"/>
+  </g>
+  <rect x="112" y="172" width="288" height="168" rx="34" fill="url(#os-slide-sheen)"/>
+  <rect x="113.5" y="173.5" width="285" height="165" rx="32.5" stroke="url(#os-slide-edge)" stroke-width="3"/>
+</svg>`;

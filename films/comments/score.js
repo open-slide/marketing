@@ -455,19 +455,25 @@ export default function score(kit) {
   bloom(APPLY.clear + 0.1, 0.18);
   cut(APPLY.close, 0.35);
 
-  // Outro: the lockup lands on a braam that resolves to F.
-  swellInto(OUTRO.lockup, 0.8, 0.35, 5000);
-  braam(OUTRO.lockup, [29, 41, 48, 53, 57], { gain: 0.6, dur: 4 });
-  boom(OUTRO.lockup, 0.7);
-  strings(OUTRO.lockup, 3.4, [57, 60, 64, 65, 69, 72], {
+  // Outro: the copy over a held chord, then the logo lands on the bar with
+  // one heavy low hit that rings out under the fade.
+  strings(OUTRO.text, OUTRO.logo - OUTRO.text, CH.Bb.pad, {
+    gain: 0.45,
+    attack: 0.4,
+    release: 0.3,
+    cutoff: 1600,
+  });
+  drone(OUTRO.text, OUTRO.logo - OUTRO.text + 0.2, 34, 0.3);
+  piano(OUTRO.text + 0.15, 74, { gain: 0.24, decay: 3 });
+  piano(OUTRO.text + 1.15, 77, { gain: 0.2, pan: 0.25, decay: 3 });
+  for (let t = OUTRO.text; t < OUTRO.logo - 0.4; t += BEAT) tick(t, 0.06, 0);
+  boom(OUTRO.logo, 1);
+  braam(OUTRO.logo, [29, 41, 48, 53], { gain: 0.55, dur: 4.2 });
+  strings(OUTRO.logo, 3.8, [53, 57, 60, 65, 69, 72], {
     gain: 0.55,
-    attack: 0.2,
+    attack: 0.05,
     release: 1.2,
-    cutoff: (t) => 3000 - (t - OUTRO.lockup) * 500,
+    cutoff: (t) => 2600 - (t - OUTRO.logo) * 380,
   });
-  drone(OUTRO.lockup, 4, 29, 0.42);
-  [77, 81, 84].forEach((m, i) => {
-    piano(OUTRO.lockup + 0.6 + i * 0.6, m, { gain: 0.2, pan: i % 2 ? 0.3 : -0.3, decay: 2.6 });
-  });
-  thock(OUTRO.cta, 0.2);
+  drone(OUTRO.logo, 4, 29, 0.5);
 }
