@@ -1,8 +1,8 @@
 import { Biquad, mtof, rng, Saw, Sine, TAU } from '../../audio/dsp.mjs';
 import { APPLY as CMD, NOTES } from './copy.js';
-import { APPLY, ELEMENT, MODE, OUTRO, RAIL, REGION, TITLE } from './timeline.js';
+import { APPLY, CUTS, DEMO, OUTRO } from './timeline.js';
 
-// A slow cinematic pulse instead of the house kit: a sub drone, felt piano,
+// A cinematic pulse instead of the house kit: a sub drone, felt piano,
 // a ticking clock on eighths, a muted ostinato, soft toms, and braams on the
 // hits. All of the sound design is drawn here too, so nothing borrows the
 // shared sfx palette. One chord per bar (2 s).
@@ -13,17 +13,7 @@ const CH = {
   C: { root: 36, pad: [55, 60, 62, 64, 67], keys: [64, 67, 72, 74, 76, 79] },
   Gm: { root: 43, pad: [58, 62, 65, 67, 70], keys: [67, 70, 74, 77, 79, 82] },
 };
-const BARS = [
-  'Dm Dm Bb',
-  'Dm Bb Dm',
-  'Dm Bb F C',
-  'Dm Bb F C Dm Bb',
-  'Gm Bb F C Gm C',
-  'Bb C',
-  'Dm Dm',
-  'Dm Bb F',
-  'Gm C F F',
-]
+const BARS = ['Dm Bb F', 'C Dm Bb', 'F C Gm', 'Bb F C', 'Bb Dm Dm', 'Dm Bb F F F']
   .join(' ')
   .split(' ');
 const chordAt = (t) => CH[BARS[Math.min(BARS.length - 1, Math.floor(t / 2))]];
@@ -240,26 +230,6 @@ export default function score(kit) {
 
   // Sound design.
 
-  function camMove(t, dur = 1, gain = 0.4, bright = 1) {
-    const a = new Biquad('bp', 300, 0.9);
-    const b = new Biquad('bp', 300, 0.9);
-    sfx.voice(
-      t,
-      dur,
-      (x, i) => {
-        const p = x / dur;
-        if (i % 32 === 0) {
-          const f = 160 + 1400 * bright * Math.sin(Math.PI * p) ** 2;
-          a.set(f, 0.9);
-          b.set(f * 1.2, 0.9);
-        }
-        const e = Math.sin(Math.PI * p) ** 2;
-        return [a.run(N()) * e * (1.1 - p), b.run(N()) * e * (0.1 + p)];
-      },
-      { gain },
-    );
-  }
-
   function mouse(t, gain = 0.5) {
     const bp = new Biquad('bp', 2600, 1.6);
     const s = new Sine();
@@ -360,148 +330,121 @@ export default function score(kit) {
 
   // Arrangement.
 
-  // The pulse, in half time: ticks on eighths, a sub on beats 1 and 3, a
-  // muted ostinato, and a string chord per bar.
+  // The pulse: ticks on eighths, a sub on beats 1 and 3, a muted ostinato,
+  // optional toms, and a string chord per bar.
   const pulse = (from, to, { ticks = 1, subs = 1, ost = 1, bright = 0.6, toms = 0 } = {}) => {
     for (let t = from; t < to - 1e-6; t += BEAT / 2) {
       const step = Math.round(t / (BEAT / 2));
-      tick(t, (step % 4 === 0 ? 0.16 : 0.07) * ticks, step % 2 ? 0.3 : -0.3);
+      tick(t, (step % 4 === 0 ? 0.17 : 0.08) * ticks, step % 2 ? 0.3 : -0.3);
     }
     for (let t = from; t < to - 1e-6; t += BEAT) {
       const b = Math.round(t / BEAT) % 4;
       if (subs && b % 2 === 0) sub(t, 0.5 * subs);
       const ch = chordAt(t);
-      if (ost) ostinato(t, ch.root + (b === 3 ? 12 : 0), BEAT * 0.8, 0.32 * ost, bright);
+      if (ost) {
+        ostinato(t, ch.root, BEAT / 2 - 0.04, 0.36 * ost, bright);
+        ostinato(t + BEAT / 2, ch.root + 12, BEAT / 2 - 0.04, 0.24 * ost, bright);
+      }
       if (toms) {
-        if (b === 0) tom(t, 0.6 * toms, 84);
-        if (b === 2) tom(t + BEAT * 0.5, 0.4 * toms, 100, 0.25);
-        if (b === 3) tom(t + BEAT * 0.5, 0.35 * toms, 76, -0.25);
+        if (b === 0) tom(t, 0.65 * toms, 86);
+        if (b === 1) tom(t + BEAT * 0.5, 0.4 * toms, 108, 0.25);
+        if (b === 3) tom(t + BEAT * 0.5, 0.4 * toms, 76, -0.25);
       }
     }
     for (let bar = Math.ceil(from / 2) * 2; bar < to - 0.01; bar += 2) {
       strings(bar, 2, chordAt(bar).pad, {
-        gain: 0.42,
-        attack: 0.9,
-        release: 1.0,
-        cutoff: 800 + bright * 1300,
+        gain: 0.4,
+        attack: 0.5,
+        release: 0.8,
+        cutoff: 800 + bright * 1400,
       });
     }
   };
-  const motif = (from, to, { octave = 0, gain = 0.2, every = 1 } = {}) => {
+  const motif = (from, to, { octave = 0, gain = 0.18, every = 1 } = {}) => {
     const pat = [0, 3, 1, 4, 2, 5, 3, 1];
     let k = 0;
     for (let t = from; t < to - 1e-6; t += every) {
       const keys = chordAt(t).keys;
-      piano(t, keys[pat[k % pat.length]] + octave, {
-        gain,
-        pan: k % 2 ? 0.3 : -0.3,
-        decay: 2.4,
-      });
+      piano(t, keys[pat[k % pat.length]] + octave, { gain, pan: k % 2 ? 0.3 : -0.3, decay: 2 });
       k++;
     }
   };
+  // Each hero-shot cut gets a soft low tap, so the edit breathes with the
+  // music.
+  const cut = (t, gain = 0.3) => {
+    sub(t, gain, 48);
+    tick(t, 0.12);
+  };
 
-  // Cold open: drone, air, a slow four-note motif, a long swell into the title.
-  drone(0, 6.3, 26, 0.18);
-  air(0, 6.3, { gain: 0.07, from: 300, to: 1400 });
-  strings(0.3, 5.6, [57, 64, 65], { gain: 0.15, attack: 3.2, cutoff: (t) => 400 + t * 180 });
-  piano(0.9, 69, { gain: 0.3, pan: -0.2, decay: 3.2 });
-  piano(2.4, 65, { gain: 0.26, pan: 0.2, decay: 3.2 });
-  piano(3.9, 64, { gain: 0.24, decay: 3.2 });
-  piano(4.9, 62, { gain: 0.22, pan: -0.15, decay: 3.2 });
-  swellInto(TITLE.hit, 2.2, 0.45, 4000);
+  // Demo: the music starts with the first shot and builds across the montage.
+  drone(0, 26, 26, 0.18);
+  pulse(0, 8, { ticks: 0.8, subs: 0.7, ost: 0.5, bright: 0.4 });
+  pulse(8, 14, { ticks: 0.9, subs: 0.9, ost: 0.8, bright: 0.5 });
+  pulse(14, 23, { ticks: 1, subs: 1, ost: 1, bright: 0.65 });
+  pulse(23, 26, { ticks: 1.1, subs: 1, ost: 1, bright: 0.8, toms: 0.5 });
+  motif(0, 26, { gain: 0.15 });
+  for (const t of Object.values(CUTS).slice(1)) cut(t);
 
-  // Title: a soft braam and boom, the held chord, the motif an octave up.
-  braam(TITLE.hit, [26, 38, 45, 50, 53], { gain: 0.6, dur: 4.2 });
-  boom(TITLE.hit, 0.75);
-  pinDrop(TITLE.hit + 0.05, 86, 0.4);
-  strings(TITLE.hit + 0.2, 5.6, CH.Dm.pad, { gain: 0.48, attack: 2.0, cutoff: 1200 });
-  drone(TITLE.hit + 0.2, 6, 26, 0.36);
-  [81, 77, 76, 74].forEach((m, i) => {
-    piano(TITLE.tag - 0.3 + i * 1.0, m, { gain: 0.26, pan: i % 2 ? 0.25 : -0.25, decay: 3 });
-  });
-  for (const t of [10, 11, 11.5]) sub(t, 0.3 + (t - 10) * 0.1);
-  camMove(11.2, 1.6, 0.22, 0.8);
+  mouse(DEMO.modeClick, 0.5);
+  lock(DEMO.modeClick + 0.02, 0.5);
+  bloom(DEMO.hint, 0.22);
 
-  // Mode: the key, a long glide to the switcher, which settles into place.
-  pulse(12, 16, { ticks: 0.6, subs: 0.6, ost: 0, bright: 0.3 });
-  keyDown(MODE.press, 0.7);
-  sub(MODE.press, 0.5, 45);
-  camMove(MODE.press + 0.4, 1.8, 0.3, 0.9);
-  lock(MODE.slide, 0.55);
-  pulse(16, 20, { ticks: 0.7, subs: 0.8, ost: 0.6, bright: 0.4 });
-  motif(16, 20, { gain: 0.16 });
-  bloom(MODE.hint, 0.2);
-  camMove(19.0, 2.0, 0.22, 0.7);
+  mouse(DEMO.click, 0.55);
+  pinDrop(DEMO.click + 0.02, 86, 0.55);
+  bloom(DEMO.click + 0.06, 0.2);
+  for (const [t] of typeTimes(NOTES.head, DEMO.type, DEMO.cps)) thock(t, 0.28);
+  mouse(DEMO.send, 0.5);
+  send(DEMO.send + 0.02, 0.5);
+  roll(DEMO.count + 0.05, 0.5);
 
-  // Element: a slow click, a softly written note, a gentle send.
-  pulse(20, 32, { ticks: 0.8, subs: 0.9, ost: 0.8, bright: 0.5 });
-  motif(20, 32, { gain: 0.15 });
-  mouse(ELEMENT.click, 0.5);
-  pinDrop(ELEMENT.click + 0.03, 86, 0.5);
-  bloom(ELEMENT.click + 0.1, 0.2);
-  for (const [t] of typeTimes(NOTES.head, ELEMENT.type, ELEMENT.cps)) thock(t, 0.26);
-  mouse(ELEMENT.send, 0.45);
-  send(ELEMENT.send + 0.03, 0.5);
-  camMove(ELEMENT.send + 0.1, 1.6, 0.25, 0.8);
-  roll(ELEMENT.count + 0.1, 0.5);
-
-  // Region: a slow drag, the note, ⌘↵, then the kicker.
-  pulse(32, 44, { ticks: 0.9, subs: 1, ost: 0.9, bright: 0.65 });
-  motif(32, 44, { gain: 0.14 });
-  mouse(REGION.down, 0.45);
-  const dragDur = REGION.up - REGION.down;
+  mouse(DEMO.down, 0.45);
+  const dragDur = DEMO.up - DEMO.down;
   const drag = new Biquad('bp', 1200, 2);
   sfx.voice(
-    REGION.down,
+    DEMO.down,
     dragDur,
     (x, i) => {
-      if (i % 32 === 0) drag.set(700 + 1800 * (x / dragDur), 2);
+      if (i % 32 === 0) drag.set(800 + 2200 * (x / dragDur), 2);
       return drag.run(N()) * Math.sin((Math.PI * x) / dragDur);
     },
-    { gain: 0.08 },
+    { gain: 0.1 },
   );
-  mouse(REGION.up, 0.4);
-  pinDrop(REGION.up + 0.03, 88, 0.5);
-  bloom(REGION.up + 0.1, 0.2);
-  for (const [t] of typeTimes(NOTES.chart, REGION.type, REGION.cps)) thock(t, 0.24);
-  keyDown(REGION.post, 0.45);
-  send(REGION.post + 0.04, 0.45);
-  roll(REGION.post + 0.15, 0.5);
-  camMove(REGION.post + 0.3, 1.8, 0.22, 0.8);
-  mouse(REGION.click, 0.45);
-  pinDrop(REGION.click + 0.03, 91, 0.5);
-  for (const [t] of typeTimes(NOTES.kicker, REGION.type2, REGION.cps2)) thock(t, 0.24);
-  keyDown(REGION.post2, 0.45);
-  send(REGION.post2 + 0.04, 0.45);
-  roll(REGION.post2 + 0.15, 0.5);
-  camMove(REGION.post2 + 0.3, 1.6, 0.25, 0.8);
+  mouse(DEMO.up, 0.4);
+  pinDrop(DEMO.up + 0.02, 88, 0.55);
+  bloom(DEMO.up + 0.06, 0.2);
+  for (const [t] of typeTimes(NOTES.chart, DEMO.type2, DEMO.cps2)) thock(t, 0.26);
+  keyDown(DEMO.post, 0.5);
+  send(DEMO.post + 0.03, 0.45);
 
-  // Rail: badges land on the beat, toms enter softly, the air rises.
-  pulse(44, 48, { ticks: 1, subs: 1, ost: 1, bright: 0.8, toms: 0.45 });
-  RAIL.badges.forEach((t, i) => {
-    pinDrop(t, [86, 89, 93][i], 0.45);
+  mouse(DEMO.click3, 0.5);
+  pinDrop(DEMO.click3 + 0.02, 91, 0.55);
+  for (const [t] of typeTimes(NOTES.kicker, DEMO.type3, DEMO.cps3)) thock(t, 0.26);
+  keyDown(DEMO.post3, 0.5);
+  send(DEMO.post3 + 0.03, 0.45);
+
+  DEMO.badges.forEach((t, i) => {
+    pinDrop(t, [86, 89, 93][i], 0.5);
   });
-  air(44, 4, { gain: 0.2, from: 500, to: 3200 });
+  air(23, 3, { gain: 0.18, from: 500, to: 3200 });
 
   // Apply: the terminal over ticks and a rising string bed, a breath, then
   // the drop.
-  for (let t = 48; t < APPLY.enter - 1e-6; t += BEAT / 2) tick(t, 0.1, 0);
-  for (let t = 48; t < APPLY.enter; t += BEAT * 2) sub(t, 0.35 + (t - 48) * 0.06);
-  strings(48, APPLY.enter - 48, [62, 65, 69, 74], {
+  for (let t = 26; t < APPLY.enter - 1e-6; t += BEAT / 2) tick(t, 0.11, 0);
+  for (let t = 26; t < APPLY.enter; t += BEAT * 2) sub(t, 0.35 + (t - 26) * 0.08);
+  strings(26, APPLY.enter - 26, [62, 65, 69, 74], {
     gain: 0.45,
-    attack: 2.4,
-    release: 0.3,
-    cutoff: (t) => 600 + (t - 48) * 600,
+    attack: 1.6,
+    release: 0.2,
+    cutoff: (t) => 600 + (t - 26) * 900,
   });
   for (const [t] of typeTimes(CMD, APPLY.type, APPLY.cps)) thock(t, 0.36);
-  keyDown(APPLY.enter, 0.7);
-  swellInto(APPLY.drop, 0.45, 0.25, 6000);
+  keyDown(APPLY.enter, 0.75);
+  swellInto(APPLY.drop, 0.6, 0.3, 6000);
 
-  braam(APPLY.drop, [26, 38, 45, 50, 57], { gain: 0.75, dur: 3.6 });
+  braam(APPLY.drop, [26, 38, 45, 50, 57], { gain: 0.75, dur: 3.2 });
   boom(APPLY.drop, 0.9);
-  pulse(52, 58, { ticks: 1.1, subs: 1.1, ost: 1, bright: 0.95, toms: 0.8 });
-  motif(52, 58, { octave: 12, gain: 0.13 });
+  pulse(30, 35, { ticks: 1.15, subs: 1.1, ost: 1.05, bright: 1, toms: 0.9 });
+  motif(30, 35, { octave: 12, gain: 0.13, every: 0.5 });
   APPLY.resolve.forEach((t, i) => {
     resolve(t, [86, 89, 93][i], 0.6);
   });
@@ -510,32 +453,21 @@ export default function score(kit) {
     roll(t, 0.35);
   });
   bloom(APPLY.clear + 0.1, 0.18);
+  cut(APPLY.close, 0.35);
 
-  // Outro: the pin field drifts, pins ping past, everything converges into
-  // the last braam, which resolves to F.
-  strings(58, 4, CH.Gm.pad, { gain: 0.5, attack: 1.2, cutoff: 2000 });
-  drone(58, 4, 31, 0.35);
-  const pings = rng(5);
-  for (let t = 58.4; t < OUTRO.converge; t += 0.28 + pings() * 0.3) {
-    glass(t, [81, 84, 86, 88, 91, 93][Math.floor(pings() * 6)], {
-      gain: 0.045,
-      pan: pings() - 0.5,
-      decay: 0.8,
-    });
-  }
-  swellInto(OUTRO.lockup, 1.6, 0.5, 5000);
-  camMove(OUTRO.converge, 1.2, 0.3, 1.2);
-  braam(OUTRO.lockup, [29, 41, 48, 53, 57], { gain: 0.65, dur: 4.4 });
-  boom(OUTRO.lockup, 0.8);
-  strings(OUTRO.lockup, 3.8, [57, 60, 64, 65, 69, 72], {
+  // Outro: the lockup lands on a braam that resolves to F.
+  swellInto(OUTRO.lockup, 0.8, 0.35, 5000);
+  braam(OUTRO.lockup, [29, 41, 48, 53, 57], { gain: 0.6, dur: 4 });
+  boom(OUTRO.lockup, 0.7);
+  strings(OUTRO.lockup, 3.4, [57, 60, 64, 65, 69, 72], {
     gain: 0.55,
-    attack: 0.3,
-    release: 1.4,
-    cutoff: (t) => 3000 - (t - OUTRO.lockup) * 450,
+    attack: 0.2,
+    release: 1.2,
+    cutoff: (t) => 3000 - (t - OUTRO.lockup) * 500,
   });
-  drone(OUTRO.lockup, 4, 29, 0.45);
-  [77, 81, 84, 88].forEach((m, i) => {
-    piano(OUTRO.lockup + 0.8 + i * 0.7, m, { gain: 0.2, pan: i % 2 ? 0.3 : -0.3, decay: 3 });
+  drone(OUTRO.lockup, 4, 29, 0.42);
+  [77, 81, 84].forEach((m, i) => {
+    piano(OUTRO.lockup + 0.6 + i * 0.6, m, { gain: 0.2, pan: i % 2 ? 0.3 : -0.3, decay: 2.6 });
   });
   thock(OUTRO.cta, 0.2);
 }

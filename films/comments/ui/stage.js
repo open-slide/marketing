@@ -22,7 +22,8 @@ export const COMMENTS = ['head', 'chart', 'kicker'];
 
 // The dark editor floating in a camera rig, with comment mode's whole layer:
 // a pin and frame per comment, the hover and marquee frames, one composer,
-// the island pill, and both pointers (bubble on the canvas, arrow on cards).
+// the island pill, and both pointers (bubble on the canvas, arrow on cards
+// and chrome).
 export function editorStage(root, { unit = 2.5 } = {}) {
   const cam = rig(root, { unit });
   const ed = editor();
@@ -89,8 +90,8 @@ export function editorStage(root, { unit = 2.5 } = {}) {
     island,
     toWorld: (x, y) => [x - WIN.w / 2, y - WIN.h / 2],
     // Bubble over the canvas, arrow over a card, like core.
-    pointer(T, { x, y, press = 0, clicks = [], card = null, show = 1 }) {
-      const a = overCard(x, y, card) ? 1 : 0;
+    pointer(T, { x, y, press = 0, clicks = [], card = null, show = 1, arrow: chrome = false }) {
+      const a = chrome || overCard(x, y, card) ? 1 : 0;
       bubble.update({ x, y, press, opacity: show * (1 - a) });
       arrow.update(T, { x, y, clicks: a ? clicks : [], opacity: show * a });
     },

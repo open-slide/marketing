@@ -1,63 +1,73 @@
 import { beatGrid, sequence } from '#lib/film.js';
 
-export const DURATION = 66;
+export const DURATION = 39;
 export const { BEAT, BAR } = beatGrid(120);
 
-// Each shot is one long camera move. Shots dissolve into each other over
-// 1.2 s centred on the bar line; only the drop inside `apply` is a hard cut.
+// A montage of hero shots: tight, near-frontal crops of the UI, each with a
+// small drift, cut on the beat. `demo` and `apply` hold several shots each.
 export const { spans: SPANS } = sequence(DURATION, [
-  { name: 'cold', at: 0 },
-  { name: 'title', at: 6, overlap: 0.6 },
-  { name: 'mode', at: 12, overlap: 0.6 },
-  { name: 'element', at: 20, overlap: 0.6 },
-  { name: 'region', at: 32, overlap: 0.6 },
-  { name: 'rail', at: 44, overlap: 0.6 },
-  { name: 'apply', at: 48, overlap: 0.6 },
-  { name: 'outro', at: 58, overlap: 0.6 },
+  { name: 'demo', at: 0 },
+  { name: 'apply', at: 26 },
+  { name: 'outro', at: 35 },
 ]);
 
-export const COLD = { rack: 2.0 };
-export const TITLE = { hit: 6, sweep: 6.8, tag: 7.8 };
-export const MODE = { press: 14, slide: 16, hint: 17 };
-export const ELEMENT = {
-  hover: 22.0,
-  click: 23.0,
-  type: 24.4,
-  cps: 9,
-  send: 28.0,
-  count: 29.5,
+// Shot cuts inside `demo`.
+export const CUTS = {
+  switch: 0,
+  hint: 3,
+  hover: 5,
+  compose: 8,
+  count: 12,
+  drag: 14,
+  compose2: 17,
+  kicker: 20,
+  rail: 23,
 };
-export const REGION = {
-  down: 33.5,
-  up: 35.5,
-  type: 36.0,
-  cps: 11,
-  post: 39.2,
-  click: 40.6,
-  type2: 41.0,
-  cps2: 9,
-  post2: 42.6,
+
+export const DEMO = {
+  modeClick: 1.2,
+  hint: 3.3,
+  hover: 6.0,
+  click: 7.0,
+  type: 8.3,
+  cps: 12,
+  send: 11.2,
+  count: 12.4,
+  down: 14.4,
+  up: 15.6,
+  type2: 17.2,
+  cps2: 14,
+  post: 19.7,
+  click3: 20.8,
+  type3: 21.1,
+  cps3: 12,
+  post3: 22.4,
+  badges: [23.5, 24.1, 24.7],
 };
-export const RAIL = { badges: [45, 46, 47] };
+
+// Rail rows that gain a badge in the rail shot, one comment each.
+export const LATER = [2, 3, 5];
+
 export const APPLY = {
-  type: 48.8,
-  cps: 8,
-  enter: 51.5,
-  drop: 52,
-  resolve: [53, 54, 55],
+  type: 26.6,
+  cps: 12,
+  enter: 28.8,
+  drop: 30,
+  resolve: [30.6, 31.3, 32.0],
   // The three comments on other pages clear right after.
-  rest: [55.6, 56.0, 56.4],
+  rest: [32.5, 32.8, 33.1],
   // At zero the pill swaps straight back to the empty hint.
-  clear: 56.4,
+  clear: 33.1,
+  close: 33,
 };
-export const OUTRO = { converge: 60.8, lockup: 62, cta: 62.8, site: 63.3, fade: 64.6 };
+
+export const OUTRO = { lockup: 35, cta: 35.6, site: 36.0, fade: 37.6 };
 
 // The pill's total: 3 comments on page 1, then 3 more across the deck in the
 // rail shot.
 export const TOTAL = 6;
 
 export const HITS = [
-  { t: TITLE.hit, amount: 0.12 },
-  { t: APPLY.drop, amount: 0.18 },
-  { t: OUTRO.lockup, amount: 0.1 },
+  { t: APPLY.drop, amount: 0.15 },
+  { t: OUTRO.lockup, amount: 0.08 },
 ];
